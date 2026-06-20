@@ -1205,10 +1205,7 @@
     <div class="section-divider"></div>
     <div class="coach-layout">
       <div class="coach-img-wrap">
-        <div class="coach-img-placeholder">
-          <span>🏸</span>
-          <p>Coach Aman Tiwari</p>
-        </div>
+        <img src="images/coach-aman-tiwari.jpg" alt="Coach Aman Tiwari" class="coach-img" />
         <div class="coach-frame"></div>
         <div class="coach-frame-tl"></div>
       </div>
@@ -1253,15 +1250,19 @@
     <div class="section-divider"></div>
     <div class="gallery-grid">
       <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=600&q=80" alt="Badminton training" loading="lazy" />
+        <img src="images/gallery-1.jpg" alt="Student with medal and certificate" loading="lazy" />
         <div class="gallery-overlay">🏸</div>
       </div>
       <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1599586120429-48281b6f0ece?w=600&q=80" alt="Badminton rackets on court" loading="lazy" />
+        <img src="images/gallery-2.jpg" alt="Students with trophies and coaches" loading="lazy" />
         <div class="gallery-overlay">🏸</div>
       </div>
       <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=600&q=80" alt="Players at net" loading="lazy" />
+        <img src="images/gallery-3.jpg" alt="Final result winners with coaches" loading="lazy" />
+        <div class="gallery-overlay">🏸</div>
+      </div>
+      <div class="gallery-item">
+        <img src="images/gallery-4.jpg" alt="Student with Prometheus Cup trophy" loading="lazy" />
         <div class="gallery-overlay">🏸</div>
       </div>
       <div class="gallery-item">
@@ -1269,11 +1270,7 @@
         <div class="gallery-overlay">🏸</div>
       </div>
       <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=600&q=80" alt="Court training" loading="lazy" />
-        <div class="gallery-overlay">🏸</div>
-      </div>
-      <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&q=80" alt="Fitness training" loading="lazy" />
+        <img src="https://images.unsplash.com/photo-1599586120429-48281b6f0ece?w=600&q=80" alt="Badminton rackets on court" loading="lazy" />
         <div class="gallery-overlay">🏸</div>
       </div>
     </div>
@@ -1338,27 +1335,27 @@
           <div class="form-row">
             <div class="form-group">
               <label>Full Name <span class="req">*</span></label>
-              <input type="text" placeholder="Your full name" required />
+              <input type="text" name="name" placeholder="Your full name" required />
             </div>
             <div class="form-group">
               <label>Phone <span class="req">*</span></label>
-              <input type="tel" placeholder="+91 00000 00000" required />
+              <input type="tel" name="phone" placeholder="+91 00000 00000" required />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label>Email <span class="req">*</span></label>
-              <input type="email" placeholder="you@example.com" required />
+              <input type="email" name="email" placeholder="you@example.com" required />
             </div>
             <div class="form-group">
               <label>Age</label>
-              <input type="number" placeholder="e.g. 16" min="5" max="80" />
+              <input type="number" name="age" placeholder="e.g. 16" min="5" max="80" />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label>Preferred Batch</label>
-              <select>
+              <select name="batch">
                 <option value="" disabled selected>Select a batch</option>
                 <option>Batch 1 – 4:00 PM to 5:00 PM</option>
                 <option>Batch 2 – 5:00 PM to 6:00 PM</option>
@@ -1367,7 +1364,7 @@
             </div>
             <div class="form-group">
               <label>Skill Level</label>
-              <select>
+              <select name="skillLevel">
                 <option value="" disabled selected>Select your level</option>
                 <option>Beginner</option>
                 <option>Intermediate</option>
@@ -1378,12 +1375,15 @@
           </div>
           <div class="form-group full" style="margin-bottom:20px;">
             <label>Message (Optional)</label>
-            <textarea placeholder="Any questions or special requirements..."></textarea>
+            <textarea name="message" placeholder="Any questions or special requirements..."></textarea>
           </div>
-          <button type="submit" class="btn-submit">Submit Enrollment →</button>
+          <button type="submit" class="btn-submit" id="submitBtn">Submit Enrollment →</button>
         </form>
         <div class="form-success" id="formSuccess">
           ✅ Enrollment received! We'll contact you within 24 hours.
+        </div>
+        <div class="form-error" id="formError" style="display:none; background: rgba(220,53,69,0.1); border: 1px solid #dc3545; border-radius: 3px; padding: 16px; text-align: center; color: #dc3545; font-weight: 600; margin-top: 16px;">
+          ⚠️ Something went wrong. Please call us at 87279 83932 or try again.
         </div>
       </div>
     </div>
@@ -1491,11 +1491,37 @@
     });
   });
 
-  // Enroll form submit
+  // Enroll form submit — sends data to Google Apps Script (logs to Sheet + emails you)
+  const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
   function handleEnroll(e) {
     e.preventDefault();
-    document.getElementById('enrollForm').style.display = 'none';
-    document.getElementById('formSuccess').style.display = 'block';
+    const form = document.getElementById('enrollForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorBox = document.getElementById('formError');
+    const successBox = document.getElementById('formSuccess');
+
+    errorBox.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'text/plain' } // avoids CORS preflight on Apps Script
+    })
+      .then(() => {
+        form.style.display = 'none';
+        successBox.style.display = 'block';
+      })
+      .catch(() => {
+        errorBox.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Enrollment →';
+      });
   }
 
   // Smooth scroll for anchor links
